@@ -9,6 +9,9 @@
     "prettier": "2.3.2"
   },
   "jest": {
+    "testMatch": [
+      "<rootDir>/**/__tests__/*.test.js"
+    ],
     "testPathIgnorePatterns": [
       "__tests__/helpers.js"
     ]
