@@ -1,6 +1,6 @@
 const uuid = require("uuid");
-const { Table } = require("moggies-db");
-jest.mock("moggies-db");
+const { Table } = require("@moggiez/moggies-db");
+jest.mock("@moggiez/moggies-db");
 
 const mockAWSLib = () => {
   const mockGet = jest.fn();
@@ -128,13 +128,22 @@ const lambdaRequestTemplate = {
   isBase64Encoded: false,
 };
 
-const buildLambdaRequest = (httpMethod, routeBase, path, payload) => {
+const buildLambdaRequest = (
+  httpMethod,
+  routeBase,
+  path,
+  payload,
+  pathParams
+) => {
   const result = { ...lambdaRequestTemplate };
   result.requestId = uuid.v4();
   result.httpMethod = httpMethod;
   result.requestContext.httpMethod = result.httpMethod;
   result.resource = `/${routeBase}/{proxy+}`;
   result.requestContext.resourcePath = result.resource;
+  if (pathParams) {
+    result.pathParameters = pathParams;
+  }
   if (path) {
     result.pathParameters.proxy = path;
     result.path = `/${routeBase}/${path}`;

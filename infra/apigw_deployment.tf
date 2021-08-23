@@ -3,7 +3,12 @@ resource "aws_api_gateway_deployment" "api_deployment" {
   for_each = local.stages
 
   depends_on = [
-    module.proxy_part
+    module.orgId_path_part,
+    module.orgId_path_part_cors,
+    module.domains_path_part,
+    module.domains_path_part_cors,
+    module.domainName_path_part,
+    module.domainName_path_part_cors
   ]
 
   rest_api_id = aws_api_gateway_rest_api._.id

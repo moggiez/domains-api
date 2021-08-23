@@ -1,17 +1,25 @@
 "use strict";
 
 const AWS = require("aws-sdk");
-const db = require("moggies-db");
+const db = require("@moggiez/moggies-db");
+const helpers = require("@moggiez/moggies-lambda-helpers");
+const auth = require("@moggiez/moggies-auth");
 
-const config = require("./config");
-const helpers = require("moggies-lambda-helpers");
-const auth = require("moggies-auth");
 const { Handler } = require("./handler");
+
+const DEBUG = false;
+
+const tableConfig = {
+  tableName: "domains",
+  hashKey: "OrganisationId",
+  sortKey: "DomainName",
+  mapper: defaultMapper,
+};
 
 exports.handler = function (event, context, callback) {
   const response = helpers.getResponseFn(callback);
 
-  if (config.DEBUG) {
+  if (DEBUG) {
     response(200, event);
   }
 
@@ -19,7 +27,7 @@ exports.handler = function (event, context, callback) {
   const request = helpers.getRequestFromEvent(event);
   request.user = user;
 
-  const table = new db.Table({ config: db.tableConfigs.domains, AWS: AWS });
+  const table = new db.Table({ config: tableConfig, AWS: AWS });
 
   const handler = new Handler(table);
   handler.handle(request, response);

@@ -1,17 +1,17 @@
 const uuid = require("uuid");
 const { Handler } = require("../handler");
 const { buildLambdaRequest, mockTable } = require("./helpers");
-const helpers = require("moggies-lambda-helpers");
-const auth = require("moggies-auth");
 
-const { Table } = require("moggies-db");
-jest.mock("moggies-db");
+const helpers = require("@moggiez/moggies-lambda-helpers");
+const auth = require("@moggiez/moggies-auth");
+const { Table } = require("@moggiez/moggies-db");
+jest.mock("@moggiez/moggies-db");
 
 const response = jest.fn();
 
 describe("Handler.handle", () => {
   beforeEach(() => {
-    Table.mockClear();
+    jest.clearAllMocks();
   });
 
   it("calls this.get when httpMethod is GET", () => {
@@ -20,9 +20,13 @@ describe("Handler.handle", () => {
     const event = buildLambdaRequest(
       "GET",
       "/domain",
-      `${orgId}/${domainName}`,
+      `${orgId}/domains/${domainName}`,
       {
         TestField: 1,
+      },
+      {
+        organisationId: orgId,
+        domainName,
       }
     );
     const user = auth.getUserFromEvent(event);
@@ -37,6 +41,78 @@ describe("Handler.handle", () => {
     expect(handler.get).toHaveBeenCalledWith(orgId, domainName, response);
   });
 
+  it("returns 400 when POST with invalid domainName", async () => {
+    const domainName = "not-a-domain";
+    const event = buildLambdaRequest(
+      "POST",
+      "/domain",
+      `${uuid.v4()}/domains/${domainName}`,
+      {},
+      {
+        organisationId: uuid.v4(),
+        domainName,
+      }
+    );
+    const user = auth.getUserFromEvent(event);
+    const request = helpers.getRequestFromEvent(event);
+    request.user = user;
+
+    const handler = new Handler(mockTable());
+
+    await handler.handle(request, response);
+
+    expect(response).toHaveBeenCalledWith(400, "Invalid domain name.");
+  });
+
+  it("returns 400 when POST with invalid domainName including subdomain", async () => {
+    const domainName = "subdomain.validDomain.co.uk";
+    const event = buildLambdaRequest(
+      "POST",
+      "/domain",
+      `${uuid.v4()}/domains/${domainName}`,
+      {},
+      {
+        organisationId: uuid.v4(),
+        domainName,
+      }
+    );
+    const user = auth.getUserFromEvent(event);
+    const request = helpers.getRequestFromEvent(event);
+    request.user = user;
+
+    const handler = new Handler(mockTable());
+
+    await handler.handle(request, response);
+
+    expect(response).toHaveBeenCalledWith(
+      400,
+      "Invalid domain name. Subdomains not allowed."
+    );
+  });
+
+  it("returns 200 when POST with valid domainName", async () => {
+    const domainName = "validDomain.co.uk";
+    const event = buildLambdaRequest(
+      "POST",
+      "/domain",
+      `${uuid.v4()}/domains/${domainName}`,
+      {},
+      {
+        organisationId: uuid.v4(),
+        domainName,
+      }
+    );
+    const user = auth.getUserFromEvent(event);
+    const request = helpers.getRequestFromEvent(event);
+    request.user = user;
+
+    const handler = new Handler(mockTable());
+
+    await handler.handle(request, response);
+
+    expect(response).toHaveBeenCalledWith(200, undefined);
+  });
+
   it("calls this.post when httpMethod is POST", () => {
     const orgId = uuid.v4();
     const domainName = uuid.v4();
@@ -46,8 +122,12 @@ describe("Handler.handle", () => {
     const event = buildLambdaRequest(
       "POST",
       "/domain",
-      `${orgId}/${domainName}`,
-      payload
+      `${orgId}/domains/${domainName}`,
+      payload,
+      {
+        organisationId: orgId,
+        domainName,
+      }
     );
     const user = auth.getUserFromEvent(event);
     const request = helpers.getRequestFromEvent(event);
@@ -58,42 +138,7 @@ describe("Handler.handle", () => {
 
     handler.handle(request, response);
 
-    expect(handler.post).toHaveBeenCalledWith(
-      orgId,
-      domainName,
-      { ...payload },
-      response
-    );
-  });
-
-  it("calls this.put when httpMethod is PUT", () => {
-    const orgId = uuid.v4();
-    const domainName = uuid.v4();
-    const payload = {
-      TestField: 1,
-      NewField: uuid.v4(),
-    };
-    const event = buildLambdaRequest(
-      "PUT",
-      "/domain",
-      `${orgId}/${domainName}`,
-      payload
-    );
-    const user = auth.getUserFromEvent(event);
-    const request = helpers.getRequestFromEvent(event);
-    request.user = user;
-
-    const handler = new Handler(mockTable());
-    handler.put = jest.fn();
-
-    handler.handle(request, response);
-
-    expect(handler.put).toHaveBeenCalledWith(
-      orgId,
-      domainName,
-      { ...payload },
-      response
-    );
+    expect(handler.post).toHaveBeenCalledWith(orgId, domainName, response);
   });
 
   it("calls this.delete when httpMethod is DELETE", () => {
@@ -102,8 +147,12 @@ describe("Handler.handle", () => {
     const event = buildLambdaRequest(
       "DELETE",
       "/domain",
-      `${orgId}/${domainName}`,
-      {}
+      `${orgId}/domains/${domainName}`,
+      {},
+      {
+        organisationId: orgId,
+        domainName,
+      }
     );
     const user = auth.getUserFromEvent(event);
     const request = helpers.getRequestFromEvent(event);
