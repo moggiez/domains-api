@@ -1,5 +1,4 @@
-TF_BACKEND_CFG=-backend-config="bucket=moggies.io-terraform-state-backend" -backend-config="dynamodb_table=moggies.io-domains-api-terraform_state" -backend-config="key=domains-api-terraform.state" -backend-config="region=eu-west-1"
-
+VAR_FILE=default.tfvars
 # INFRASTRUCTURE
 modules-cleanup:
 	cd infra && rm -rf .terraform/modules
@@ -8,19 +7,19 @@ infra-fmt:
 	cd infra && terraform fmt -recursive
 
 infra-init:
-	cd infra && terraform init -force-copy ${TF_BACKEND_CFG}
+	cd infra && terraform init -force-copy -backend-config=./tf_backend.cfg
 
 infra-debug:
-	cd infra && TF_LOG=DEBUG terraform apply -auto-approve infra
+	cd infra && TF_LOG=DEBUG terraform apply -auto-approve  -var-file="${VAR_FILE}" infra
 
-infra-deploy: modules-cleanup
-	cd infra && terraform init && terraform apply -auto-approve
+infra-deploy: modules-cleanup infra-init
+	cd infra && terraform apply -auto-approve -var-file="${VAR_FILE}"
 
-infra-preview: modules-cleanup
-	cd infra && terraform init && terraform plan
+infra-preview: modules-cleanup infra-init
+	cd infra && terraform plan -var-file="${VAR_FILE}"
 
-infra-destroy:
-	cd infra && terraform init && terraform destroy
+infra-destroy: infra-init
+	cd infra && terraform destroy
 
 # CODE
 build-cleanup:
@@ -41,9 +40,9 @@ format:
 test:
 	npm run test
 
-update-lambda-fn:
+update-lambda-fn: build
 	aws lambda update-function-code --function-name domains-api --zip-file fileb://$(shell pwd)/dist/domains-api.zip --publish | jq .FunctionArn
 
 # NPM COMMANDS
 npm-auth:
-	aws codeartifact login --tool npm --repository team-npm --domain moggies-io --domain-owner 989665778089
+	./scripts/npm_auth.sh

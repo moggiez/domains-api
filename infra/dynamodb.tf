@@ -16,7 +16,12 @@ resource "aws_dynamodb_table" "domains" {
     type = "S"
   }
 
-  // IsVerified, VerificationLocation, VerificationCode, VerificationExpirationDate, LastVerifiedDate
+  attribute {
+    name = "DomainValidationState"
+    type = "S"
+  }
+
+  // ValidationState, ValidationExpirationDate, ValidationRecordName, ValidationRecordValue
 
   global_secondary_index {
     name            = "Domains"
@@ -25,5 +30,14 @@ resource "aws_dynamodb_table" "domains" {
     write_capacity  = 5
     read_capacity   = 5
     projection_type = "KEYS_ONLY"
+  }
+
+  global_secondary_index {
+    name            = "DomainValidationState"
+    hash_key        = "DomainValidationState"
+    range_key       = "DomainName"
+    write_capacity  = 5
+    read_capacity   = 5
+    projection_type = "ALL"
   }
 }

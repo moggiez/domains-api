@@ -6,14 +6,14 @@ const {
   getPromiseWithReject,
 } = require("./helpers");
 
-const { Table } = require("moggies-db");
-jest.mock("moggies-db");
+const { Table } = require("@moggiez/moggies-db");
+jest.mock("@moggiez/moggies-db");
 
 const response = jest.fn();
 
 describe("Handler.post", () => {
   beforeEach(() => {
-    Table.mockClear();
+    jest.clearAllMocks();
   });
 
   it("calls create on table", async () => {
@@ -26,30 +26,37 @@ describe("Handler.post", () => {
     table.create.mockReturnValue(getPromiseWithReturnValue(returnValue));
 
     const handler = new Handler(table);
-    await handler.post(orgId, domainName, payload, response);
+    await handler.post(orgId, domainName, response);
 
-    expect(table.create).toHaveBeenCalledWith(orgId, expect.any(String), {});
+    expect(table.create).toHaveBeenCalledWith({
+      hashKey: orgId,
+      sortKey: expect.any(String),
+      record: expect.objectContaining({
+        ValidationExpirationDate: expect.any(String),
+        ValidationRecordName: expect.any(String),
+        ValidationRecordValue: expect.any(String),
+      }),
+    });
     expect(response).toHaveBeenCalledWith(200, returnValue);
   });
 
   it("returns 500 when table throws an error", async () => {
     const table = mockTable();
     const orgId = uuid.v4();
-    const domainName = uuid.v4();
-    const payload = {};
+    const domainName = "validDomain.com";
 
     table.create.mockImplementation(() =>
       getPromiseWithReject("This is my error")
     );
 
     const handler = new Handler(table);
-    await handler.post(orgId, domainName, payload, response);
+    await handler.post(orgId, domainName, response);
 
-    expect(table.create).toHaveBeenCalledWith(
-      orgId,
-      domainName,
-      expect.any(Object)
-    );
+    expect(table.create).toHaveBeenCalledWith({
+      hashKey: orgId,
+      sortKey: domainName,
+      record: expect.any(Object),
+    });
     expect(response).toHaveBeenCalledWith(500, "This is my error");
   });
 });

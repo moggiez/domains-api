@@ -1,20 +1,16 @@
 variable "domain_name" {
-  type    = string
-  default = "moggies.io"
+  type = string
 }
 
 variable "region" {
-  type    = string
-  default = "eu-west-1"
+  type = string
 }
 
 variable "account" {
-  type    = string
-  default = "989665778089"
+  type = string
 }
 
 
 variable "user_pool_id" {
-  type    = string
-  default = "eu-west-1_SPWgZjaBY"
+  type = string
 }

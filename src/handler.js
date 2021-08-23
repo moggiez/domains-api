@@ -1,4 +1,17 @@
 "use strict";
+const VALIDATION_PERIOD_LENGTH_HOURS = 1;
+const isValidDomain = require("is-valid-domain");
+
+function makeid(length) {
+  var result = "";
+  var characters =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  var charactersLength = characters.length;
+  for (var i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+  }
+  return result;
+}
 
 class Handler {
   constructor(table) {
@@ -12,24 +25,14 @@ class Handler {
   }
 
   handle = async (request, response) => {
-    const organisationId = request.getPathParamAtIndex(0, "");
-    const domainName = request.getPathParamAtIndex(1, "");
-    const payload = request.body;
+    const pathParams = request.pathParameters;
     try {
       if (request.httpMethod == "GET") {
-        this.get(organisationId, domainName, response);
+        this.get(pathParams.organisationId, pathParams.domainName, response);
       } else if (request.httpMethod == "POST") {
-        this.post(organisationId, domainName, payload, response);
-      } else if (
-        request.httpMethod == "PUT" &&
-        request.pathParameters.length > 1
-      ) {
-        this.put(organisationId, domainName, payload, response);
-      } else if (
-        request.httpMethod == "DELETE" &&
-        request.pathParameters.length > 1
-      ) {
-        this.delete(organisationId, domainName, response);
+        this.post(pathParams.organisationId, pathParams.domainName, response);
+      } else if (request.httpMethod == "DELETE") {
+        this.delete(pathParams.organisationId, pathParams.domainName, response);
       } else {
         response(500, "Not supported.");
       }
@@ -42,9 +45,12 @@ class Handler {
     let data = null;
     try {
       if (domainName) {
-        data = await this.table.get(organisationId, domainName);
+        data = await this.table.get({
+          hashKey: organisationId,
+          sortKey: domainName,
+        });
       } else {
-        data = await this.table.getByPartitionKey(organisationId);
+        data = await this.table.query({ hashKey: organisationId });
       }
       const responseBody =
         "Items" in data
@@ -58,18 +64,31 @@ class Handler {
     }
   };
 
-  post = async (organisationId, domainName, payload, response) => {
-    try {
-      const data = await this.table.create(organisationId, domainName, payload);
-      response(200, data);
-    } catch (err) {
-      response(500, err);
+  post = async (organisationId, domainName, response) => {
+    if (!isValidDomain(domainName)) {
+      response(400, "Invalid domain name.");
     }
-  };
 
-  put = async (organisationId, domainName, payload, response) => {
+    if (!isValidDomain(domainName, { subdomain: false })) {
+      response(400, "Invalid domain name. Subdomains not allowed.");
+    }
+
+    const randomId = makeid(32);
+    const randomCode = makeid(32);
+    let date = new Date();
+    date.setHours(date.getHours() + VALIDATION_PERIOD_LENGTH_HOURS);
+    const record = {
+      ValidationRecordValue: `${randomCode}`,
+      ValidationRecordName: `${randomId}_moggies_domainkey.${domainName}`,
+      ValidationExpirationDate: date.toISOString(),
+    };
+
     try {
-      const data = await this.table.update(organisationId, domainName, payload);
+      const data = await this.table.create({
+        hashKey: organisationId,
+        sortKey: domainName,
+        record,
+      });
       response(200, data);
     } catch (err) {
       response(500, err);
@@ -78,7 +97,10 @@ class Handler {
 
   delete = async (organisationId, domainName, response) => {
     try {
-      const data = await this.table.delete(organisationId, domainName);
+      const data = await this.table.delete({
+        hashKey: organisationId,
+        sortKey: domainName,
+      });
       response(200, data);
     } catch (err) {
       response(500, err);

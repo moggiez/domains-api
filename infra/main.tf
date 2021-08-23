@@ -5,12 +5,7 @@ terraform {
     }
   }
 
-  backend "s3" {
-    bucket         = "moggies.io-terraform-state-backend"
-    key            = "domains-api-terraform.state"
-    region         = "eu-west-1"
-    dynamodb_table = "moggies.io-domains-api-terraform_state"
-  }
+  backend "s3" {}
 }
 
 provider "aws" {
