@@ -1,16 +1,16 @@
 variable "domain_name" {
-  type    = string
+  type = string
 }
 
 variable "region" {
-  type    = string
+  type = string
 }
 
 variable "account" {
-  type    = string
+  type = string
 }
 
 
 variable "user_pool_id" {
-  type    = string
+  type = string
 }
