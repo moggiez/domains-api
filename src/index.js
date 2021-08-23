@@ -13,7 +13,6 @@ const tableConfig = {
   tableName: "domains",
   hashKey: "OrganisationId",
   sortKey: "DomainName",
-  mapper: defaultMapper,
 };
 
 exports.handler = function (event, context, callback) {
