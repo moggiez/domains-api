@@ -18,7 +18,7 @@ module "domains_path_part" {
   api                = aws_api_gateway_rest_api._
   parent_resource    = module.orgId_path_part.api_resource
   lambda             = module.api_lambda.lambda
-  http_methods       = toset(["GET", "POST"])
+  http_methods       = toset(["GET"])
   resource_path_part = "domains"
   authorizer         = local.authorizer
 }
@@ -34,7 +34,7 @@ module "domainName_path_part" {
   api                = aws_api_gateway_rest_api._
   parent_resource    = module.domains_path_part.api_resource
   lambda             = module.api_lambda.lambda
-  http_methods       = toset(["GET", "DELETE"])
+  http_methods       = toset(["GET", "POST", "DELETE"])
   resource_path_part = "{domainName}"
   authorizer         = local.authorizer
 }
