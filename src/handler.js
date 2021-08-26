@@ -67,10 +67,12 @@ class Handler {
   post = async (organisationId, domainName, response) => {
     if (!isValidDomain(domainName)) {
       response(400, "Invalid domain name.");
+      return;
     }
 
     if (!isValidDomain(domainName, { subdomain: false })) {
       response(400, "Invalid domain name. Subdomains not allowed.");
+      return;
     }
 
     const randomId = makeid(32);
@@ -81,6 +83,7 @@ class Handler {
       ValidationRecordValue: `${randomCode}`,
       ValidationRecordName: `${randomId}_moggies_domainkey.${domainName}`,
       ValidationExpirationDate: date.toISOString(),
+      ValidationState: "PENDING",
     };
 
     try {
