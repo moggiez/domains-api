@@ -17,7 +17,7 @@ resource "aws_dynamodb_table" "domains" {
   }
 
   attribute {
-    name = "DomainValidationState"
+    name = "ValidationState"
     type = "S"
   }
 
@@ -34,7 +34,7 @@ resource "aws_dynamodb_table" "domains" {
 
   global_secondary_index {
     name            = "DomainValidationState"
-    hash_key        = "DomainValidationState"
+    hash_key        = "ValidationState"
     range_key       = "DomainName"
     write_capacity  = 5
     read_capacity   = 5

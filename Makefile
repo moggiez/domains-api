@@ -1,5 +1,6 @@
-VAR_FILE=default.tfvars
 # INFRASTRUCTURE
+VAR_FILE=default.tfvars
+
 modules-cleanup:
 	cd infra && rm -rf .terraform/modules
 
@@ -10,7 +11,7 @@ infra-init:
 	cd infra && terraform init -force-copy -backend-config=./tf_backend.cfg
 
 infra-debug:
-	cd infra && TF_LOG=DEBUG terraform apply -auto-approve  -var-file="${VAR_FILE}" infra
+	cd infra && TF_LOG=DEBUG terraform apply -auto-approve -var-file="${VAR_FILE}" infra
 
 infra-deploy: modules-cleanup infra-init
 	cd infra && terraform apply -auto-approve -var-file="${VAR_FILE}"

@@ -4,8 +4,7 @@ const isValidDomain = require("is-valid-domain");
 
 function makeid(length) {
   var result = "";
-  var characters =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  var characters = "abcdefghijklmnopqrstuvwxyz0123456789";
   var charactersLength = characters.length;
   for (var i = 0; i < length; i++) {
     result += characters.charAt(Math.floor(Math.random() * charactersLength));
@@ -28,11 +27,23 @@ class Handler {
     const pathParams = request.pathParameters;
     try {
       if (request.httpMethod == "GET") {
-        this.get(pathParams.organisationId, pathParams.domainName, response);
+        await this.get(
+          pathParams.organisationId,
+          pathParams.domainName,
+          response
+        );
       } else if (request.httpMethod == "POST") {
-        this.post(pathParams.organisationId, pathParams.domainName, response);
+        await this.post(
+          pathParams.organisationId,
+          pathParams.domainName,
+          response
+        );
       } else if (request.httpMethod == "DELETE") {
-        this.delete(pathParams.organisationId, pathParams.domainName, response);
+        await this.delete(
+          pathParams.organisationId,
+          pathParams.domainName,
+          response
+        );
       } else {
         response(500, "Not supported.");
       }
