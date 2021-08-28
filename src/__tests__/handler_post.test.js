@@ -19,8 +19,7 @@ describe("Handler.post", () => {
   it("calls create on table", async () => {
     const table = mockTable();
     const orgId = uuid.v4();
-    const domainName = uuid.v4();
-    const payload = {};
+    const domainName = "moggies.io";
 
     const returnValue = { test: uuid.v4() };
     table.create.mockReturnValue(getPromiseWithReturnValue(returnValue));
