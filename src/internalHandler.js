@@ -23,6 +23,12 @@ class InternalHandler {
     return actionMethod(actionParameters);
   };
 
+  getOrganisationValidDomains = async ({ organisationId }) => {
+    return await this.table.query({
+      hashKey: organisationId,
+    });
+  };
+
   getDomainsPendingValidation = async ({}) => {
     return await this.table.query({
       hashKey: "PENDING",
